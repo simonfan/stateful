@@ -5,7 +5,8 @@
   "description": "FSM",
   "dependencies": {
     "subject": "~0.5.8",
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "q": "1.0.1"
   },
   "devDependencies": {
     "requirejs": "*",
@@ -13,5 +14,8 @@
     "underscore": "*",
     "jquery": "*",
     "qunit": "*"
+  },
+  "resolutions": {
+    "q": "1.0.1"
   }
 }

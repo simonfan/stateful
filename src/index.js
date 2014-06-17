@@ -1,11 +1,11 @@
-//     Stateful
+//     stateful
 //     (c) simonfan
-//     Stateful is licensed under the MIT terms.
+//     stateful is licensed under the MIT terms.
 
 /**
  * AMD and CJS module.
  *
- * @module Stateful
+ * @module stateful
  */
 
 /* jshint ignore:start */
@@ -15,16 +15,24 @@ if (typeof define !== 'function') { var define = require('amdefine')(module) }
 define(function (require, exports, module) {
 	'use strict';
 
-	
-	var Subject = require('subject');
-	
-	var Lodash = require('lodash');
-	
 
-	var Stateful = function Stateful() {
+	var subject = require('subject'),
+		_       = require('lodash');
 
-	};
+	var nonEnum = { enumerable: false };
 
+	var stateful = module.exports = subject({
+		initialize: function initializeStateful(options) {
 
-	return Stateful;
+			/**
+			 * Property that holds the state of the object.
+			 * @type {[type]}
+			 */
+			this.state = options.state || this.state;
+		},
+	});
+
+	stateful
+		.assignProto(require('./__stateful/action'), nonEnum)
+		.assignProto(require('./__stateful/state'), nonEnum);
 });

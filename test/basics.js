@@ -16,17 +16,42 @@
 		define(deps, factory);
 	}
 
-})('test', function(Stateful, should) {
+})('test', function(stateful, should) {
 	'use strict';
 
-	describe('Stateful basics', function () {
+	describe('stateful basics', function () {
 		beforeEach(function (done) {
 			done();
 		});
 
-		it('is fine (:', function () {
-			var fruit = { name: 'banana' }
-			fruit.should.have.property('name', 'banana');
+		it('is fine (:', function (done) {
+
+
+			var view = stateful({
+				state: 'show:done'
+			});
+
+			view.action('show', {
+				'hide:done|hide:doing': function showWhenHidden() {
+					return 'start show';
+				},
+			});
+
+			view.action('hide', {
+				'show:done|show:doing': function hideWhenShown() {
+					return 'start hiding';
+				}
+			});
+
+
+
+			view.hide().then(function (res) {
+				res.should.eql('start hiding');
+
+				done();
+			})
+			.done();
+
 		});
 	});
 });

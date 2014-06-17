@@ -1,0 +1,107 @@
+{
+    "project": {
+        "name": "stateful",
+        "version": "0.0.0"
+    },
+    "files": {
+        "src/__stateful/action.js": {
+            "name": "src/__stateful/action.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/index.js": {
+            "name": "src/index.js",
+            "modules": {
+                "stateful": 1
+            },
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        }
+    },
+    "modules": {
+        "stateful": {
+            "name": "stateful",
+            "submodules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {},
+            "tag": "module",
+            "file": "src/index.js",
+            "line": 5,
+            "description": "AMD and CJS module."
+        }
+    },
+    "classes": {},
+    "classitems": [
+        {
+            "file": "src/__stateful/action.js",
+            "line": 9,
+            "description": "Builds the method",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "[description]",
+                    "type": "[type]"
+                },
+                {
+                    "name": "object",
+                    "description": "[description]",
+                    "type": "[type]"
+                },
+                {
+                    "name": "stateFns",
+                    "description": "[description]",
+                    "type": "[type]"
+                }
+            ],
+            "return": {
+                "description": "[description]",
+                "type": "[type]"
+            },
+            "class": ""
+        },
+        {
+            "file": "src/__stateful/action.js",
+            "line": 56,
+            "description": "Defines an action for multiple states.",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "The name of the action\n    Will be used to generate the method.",
+                    "type": "[type]"
+                },
+                {
+                    "name": "stateFns",
+                    "description": "The functions for each state.",
+                    "type": "[type]"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "src/index.js",
+            "line": 27,
+            "description": "Property that holds the state of the object.",
+            "type": "{[type]}",
+            "class": "",
+            "module": "stateful"
+        }
+    ],
+    "warnings": [
+        {
+            "message": "Missing item type\nBuilds the method",
+            "line": " src/__stateful/action.js:9"
+        },
+        {
+            "message": "Missing item type\nDefines an action for multiple states.",
+            "line": " src/__stateful/action.js:56"
+        },
+        {
+            "message": "Missing item type\nProperty that holds the state of the object.",
+            "line": " src/index.js:27"
+        }
+    ]
+}
