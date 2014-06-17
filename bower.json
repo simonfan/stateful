@@ -1,0 +1,17 @@
+{
+  "name": "stateful",
+  "main": "built/stateful.js",
+  "version": "0.0.0",
+  "description": "FSM",
+  "dependencies": {
+    "subject": "~0.5.8",
+    "lodash": "~2.4.1"
+  },
+  "devDependencies": {
+    "requirejs": "*",
+    "requirejs-text": "*",
+    "underscore": "*",
+    "jquery": "*",
+    "qunit": "*"
+  }
+}
