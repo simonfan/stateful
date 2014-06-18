@@ -24,7 +24,45 @@
 			done();
 		});
 
-		it('is fine (:', function (done) {
+		it('using only state names', function () {
+
+
+			function doNothing() {
+				return 'nothing';
+			}
+
+
+			// define a builder
+			var view = stateful.extendActions({
+				show: {
+					'hide': function showWhenHidden() {
+						return 'start show';
+					},
+					'show': doNothing
+				},
+
+				hide: {
+					'hide': doNothing,
+					'show': function hideWhenShown() {
+						return 'start hide';
+					}
+				}
+			});
+
+
+			var multistate = view({
+				state  : 'show',
+			});
+
+
+			multistate.hide().should.eql('start hide');
+		});
+
+
+
+
+
+		it('synchronous', function () {
 
 
 			var view = stateful({
@@ -45,12 +83,7 @@
 
 
 
-			view.hide().then(function (res) {
-				res.should.eql('start hiding');
-
-				done();
-			})
-			.done();
+			view.hide().should.eql('start hiding');
 
 		});
 	});

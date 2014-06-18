@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/__stateful/action.js - stateful</title>
+    <title>src/__stateful/build-action-fn.js - stateful</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -82,7 +82,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: src/__stateful/action.js</h1>
+                        <h1 class="file-heading">File: src/__stateful/build-action-fn.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
@@ -95,16 +95,42 @@ define(function (require, exports, module) {
 		q = require(&#x27;q&#x27;);
 
 	/**
+	 * Retrieves the actionFn according to the state.
+	 *
+	 * @param  {[type]} stateFns [description]
+	 * @param  {[type]} state    [description]
+	 * @return {[type]}          [description]
+	 */
+	function retrieveStateActionFn(stateFns, state) {
+
+		var fn =
+			// [1] try to get the exact state
+			stateFns[state] ||
+			// [2] get the &#x27;state name&#x27;  (statename:statestatus) (somestate:doing)
+			stateFns[state.split(&#x27;:&#x27;)[0]] ||
+			// [3] get the default fn
+			stateFns[&#x27;default&#x27;] ||
+			// [4] noop.
+			_.noop;
+
+		return fn;
+	}
+
+	/**
 	 * Builds the method
 	 *
 	 * @param  {[type]} name     [description]
-	 * @param  {[type]} object   [description]
 	 * @param  {[type]} stateFns [description]
 	 * @return {[type]}          [description]
 	 */
-	function buildActionFn(object, name, stateFns) {
+	module.exports = function buildActionFn(name, stateFns) {
 
 		// parse out the stateFns
+		// They come in the format: {
+		//     &#x27;state:doing|state:done&#x27;: fn,
+		//     &#x27;state&#x27;                 : fn,
+		//
+		// }
 		var _stateFns = {};
 
 		// state fns.
@@ -118,46 +144,39 @@ define(function (require, exports, module) {
 
 		});
 
-		//
+
+		// variables to hold state names in cache
+		var doing = name + &#x27;:doing&#x27;,
+			done  = name + &#x27;:done&#x27;;
+
+		// return a function that wraps the execution
+		// with a state setting logic.
 		return function action() {
 			// get the state of the object
-			var state = object.getState();
+			var state = this.getState();
 
 			// get the function
-			var fn = _stateFns[state] || _stateFns[&#x27;default&#x27;] || _.noop;
+			var fn = retrieveStateActionFn(_stateFns, state);
 
 			// set the state to doing
-			object.setState(name + &#x27;:doing&#x27;);
+			this.setState(doing);
 
 			// execute
-			var execution = q(fn.apply(object, arguments));
+			var execution = fn.apply(this, arguments);
 
-			execution.then(function () {
-				// set state to &#x27;done&#x27;
-				object.setState(name + &#x27;:done&#x27;);
-			});
+			if (q.isPromise(execution)) {
+
+				execution.done(_.partial(this.setState, done));
+
+			} else {
+				// synchronous if not promise
+				// state done
+				this.setState(done);
+			}
 
 			return execution;
 		};
-	}
-
-	/**
-	 * Defines an action for multiple states.
-	 * @param  {[type]} name
-	 *     The name of the action
-	 *     Will be used to generate the method.
-	 * @param  {[type]} stateFns
-	 *     The functions for each state.
-	 */
-	exports.action = function defineAction(name, stateFns) {
-
-		// build the method.
-		this[name] = buildActionFn(this, name, stateFns);
-
-		// always return &#x27;this&#x27;
-		return this;
 	};
-
 
 });
 

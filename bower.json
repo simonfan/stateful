@@ -1,7 +1,7 @@
 {
   "name": "stateful",
   "main": "built/stateful.js",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "FSM",
   "dependencies": {
     "subject": "~0.5.8",
