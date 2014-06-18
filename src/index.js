@@ -35,7 +35,7 @@ define(function (require, exports, module) {
 	 * @param  {[type]}
 	 * @return {[type]}           [description]
 	 */
-	var stateful = module.exports = subject({
+	var stateful = subject({
 		initialize: function initialize(options) {
 			this.initializeStateful(options);
 		},
@@ -48,11 +48,19 @@ define(function (require, exports, module) {
 		 */
 		initializeStateful: function initializeStateful(options) {
 
+			options = options || {};
+
 			/**
 			 * Property that holds the state of the object.
 			 * @type {[type]}
 			 */
 			this.state = options.state || this.state;
+
+			/**
+			 * Cache onto which state invocations will be set to.
+			 * @type {Object}
+			 */
+			this._cache = {};
 
 			_.bindAll(this, ['setState', 'getState']);
 		},
@@ -78,37 +86,23 @@ define(function (require, exports, module) {
 			return this;
 		},
 
+
+
+
+		cache: function cache(key, value) {
+
+			if (arguments.length === 1) {
+				// getter
+				return this._cache[key];
+			} else {
+				// setter
+				this._cache[key] = value;
+
+				return this;
+			}
+		},
+
 	});
-
-
-	/**
-	 * Proto method that defines an action.
-	 *
-	 * @param  {[type]} name     [description]
-	 * @param  {[type]} stateFns [description]
-	 * @return {[type]}          [description]
-	 */
-	stateful.assignProto('action', function defineAction(name, stateFns) {
-
-		if (_.isString(name)) {
-			// is a string, define a single action
-			this[name] = buildActionFn(name, stateFns);
-
-		} else {
-			// multiple actions
-			_.each(name, function (stateFns, name) {
-				this.action(name, stateFns);
-			}, this);
-		}
-
-		// always return 'this'
-		return this;
-	});
-
-
-
-
-
 
 
 
@@ -116,25 +110,25 @@ define(function (require, exports, module) {
 	 * Define actions onto the prototype.
 	 *
 	 * @param  {[type]} name     [description]
-	 * @param  {[type]} stateFns [description]
+	 * @param  {[type]} fn [description]
 	 * @return {[type]}          [description]
 	 */
 	stateful.assignStatic({
-		action: function definePrototypeAction(name, stateFns) {
+		statefulMethod: function definePrototypeAction(name, fn) {
 
 			if (_.isString(name)) {
 				// is a string, define a single action
 
 				// build the function
-				var fn = buildActionFn(name, stateFns);
+				var actionFn = buildActionFn(name, fn);
 
 				// assign the fn to the prototype.
-				this.assignProto(name, fn);
+				this.assignProto(name, actionFn);
 
 			} else {
 				// multiple actions
-				_.each(name, function (fns, name) {
-					this.action(name, fns);
+				_.each(name, function (fn, name) {
+					this.statefulMethod(name, fn);
 				}, this);
 			}
 
@@ -154,11 +148,17 @@ define(function (require, exports, module) {
 			var extended = this.extend();
 
 			// define actions onto the object
-			extended.action(actions);
+			extended.statefulMethod(actions);
 
 			// return the extended constructor
 			return extended;
-
 		}
 	});
+
+	/**
+	 * Export the extendActions method.
+	 *
+	 * @type {[type]}
+	 */
+	module.exports = _.bind(stateful.extendActions, stateful);
 });

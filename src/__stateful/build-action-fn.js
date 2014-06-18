@@ -6,27 +6,6 @@ define(function (require, exports, module) {
 	var _ = require('lodash'),
 		q = require('q');
 
-	/**
-	 * Retrieves the actionFn according to the state.
-	 *
-	 * @param  {[type]} stateFns [description]
-	 * @param  {[type]} state    [description]
-	 * @return {[type]}          [description]
-	 */
-	function retrieveStateActionFn(stateFns, state) {
-
-		var fn =
-			// [1] try to get the exact state
-			stateFns[state] ||
-			// [2] get the 'state name'  (statename:statestatus) (somestate:doing)
-			stateFns[state.split(':')[0]] ||
-			// [3] get the default fn
-			stateFns['default'] ||
-			// [4] noop.
-			_.noop;
-
-		return fn;
-	}
 
 	/**
 	 * Builds the method
@@ -35,31 +14,12 @@ define(function (require, exports, module) {
 	 * @param  {[type]} stateFns [description]
 	 * @return {[type]}          [description]
 	 */
-	module.exports = function buildActionFn(name, stateFns) {
-
-		// parse out the stateFns
-		// They come in the format: {
-		//     'state:doing|state:done': fn,
-		//     'state'                 : fn,
-		//
-		// }
-		var _stateFns = {};
-
-		// state fns.
-		_.each(stateFns, function (fn, stateNames) {
-
-			var split = stateNames.split(/\s*\|\s*/g);
-
-			_.each(split, function (stateName) {
-				_stateFns[stateName] = fn;
-			});
-
-		});
-
+	module.exports = function buildActionFn(name, fn) {
 
 		// variables to hold state names in cache
-		var doing = name + ':doing',
-			done  = name + ':done';
+		var doingSt = name + ':doing',
+			doneSt  = name + ':done';
+
 
 		// return a function that wraps the execution
 		// with a state setting logic.
@@ -67,27 +27,36 @@ define(function (require, exports, module) {
 			// get the state of the object
 			var state = this.getState();
 
-			// get the function
-			var fn = retrieveStateActionFn(_stateFns, state);
+			if (state === doneSt || state === doingSt) {
+				// state is the same.
+				// return the cached value
 
-			// set the state to doing
-			this.setState(doing);
-
-			// execute
-			var execution = fn.apply(this, arguments);
-
-			if (q.isPromise(execution)) {
-
-				execution.done(_.partial(this.setState, done));
+				return this.cache(name);
 
 			} else {
-				// synchronous if not promise
-				// state done
-				this.setState(done);
-			}
 
-			return execution;
+				// set the state to doing
+				this.setState(doingSt);
+
+				// execute AND SAVE TO CACHE
+				var execution = fn.apply(this, arguments);
+				this.cache(name, execution);
+
+				if (q.isPromise(execution)) {
+
+					execution.done(_.partial(this.setState, doneSt));
+
+				} else {
+					// synchronous if not promise
+					// state done
+					this.setState(doneSt);
+				}
+
+				return execution;
+
+			}
 		};
+
 	};
 
 });

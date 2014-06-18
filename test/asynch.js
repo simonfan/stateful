@@ -30,27 +30,18 @@
 			function doNothing() { return 'nothing'; }
 
 			// define a view constructor
-			var view = stateful.extendActions({
-				hide: {
-					'show:done': function hideWhenShown() {
-						return q.delay('hidden', 400);
-					},
-					'hide': doNothing
+			var view = stateful({
+				hide: function hideWhenShown() {
+					return q.delay('hidden', 400);
 				},
 
-				show: {
-					'show': doNothing,
-					hide: function showWhenHidden() {
-						return q.delay('shown', 300);
-					}
+				show: function showWhenHidden() {
+					return q.delay('shown', 300);
 				}
 			});
 
 			// instantiate
 			var instance = view({ state: 'show:done' });
-
-
-			instance.show().should.eql('nothing');
 
 			instance.hide()
 				.then(function (res) {
@@ -58,7 +49,6 @@
 					instance.getState().should.eql('hide:done');
 				})
 				.then(function () {
-					instance.hide().should.eql('nothing');
 
 					// call show
 					var show = instance.show();

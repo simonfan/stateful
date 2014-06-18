@@ -1911,27 +1911,6 @@ define('__stateful/build-action-fn',['require','exports','module','lodash','q'],
 	var _ = require('lodash'),
 		q = require('q');
 
-	/**
-	 * Retrieves the actionFn according to the state.
-	 *
-	 * @param  {[type]} stateFns [description]
-	 * @param  {[type]} state    [description]
-	 * @return {[type]}          [description]
-	 */
-	function retrieveStateActionFn(stateFns, state) {
-
-		var fn =
-			// [1] try to get the exact state
-			stateFns[state] ||
-			// [2] get the 'state name'  (statename:statestatus) (somestate:doing)
-			stateFns[state.split(':')[0]] ||
-			// [3] get the default fn
-			stateFns['default'] ||
-			// [4] noop.
-			_.noop;
-
-		return fn;
-	}
 
 	/**
 	 * Builds the method
@@ -1940,31 +1919,12 @@ define('__stateful/build-action-fn',['require','exports','module','lodash','q'],
 	 * @param  {[type]} stateFns [description]
 	 * @return {[type]}          [description]
 	 */
-	module.exports = function buildActionFn(name, stateFns) {
-
-		// parse out the stateFns
-		// They come in the format: {
-		//     'state:doing|state:done': fn,
-		//     'state'                 : fn,
-		//
-		// }
-		var _stateFns = {};
-
-		// state fns.
-		_.each(stateFns, function (fn, stateNames) {
-
-			var split = stateNames.split(/\s*\|\s*/g);
-
-			_.each(split, function (stateName) {
-				_stateFns[stateName] = fn;
-			});
-
-		});
-
+	module.exports = function buildActionFn(name, fn) {
 
 		// variables to hold state names in cache
-		var doing = name + ':doing',
-			done  = name + ':done';
+		var doingSt = name + ':doing',
+			doneSt  = name + ':done';
+
 
 		// return a function that wraps the execution
 		// with a state setting logic.
@@ -1972,27 +1932,36 @@ define('__stateful/build-action-fn',['require','exports','module','lodash','q'],
 			// get the state of the object
 			var state = this.getState();
 
-			// get the function
-			var fn = retrieveStateActionFn(_stateFns, state);
+			if (state === doneSt || state === doingSt) {
+				// state is the same.
+				// return the cached value
 
-			// set the state to doing
-			this.setState(doing);
-
-			// execute
-			var execution = fn.apply(this, arguments);
-
-			if (q.isPromise(execution)) {
-
-				execution.done(_.partial(this.setState, done));
+				return this.cache(name);
 
 			} else {
-				// synchronous if not promise
-				// state done
-				this.setState(done);
-			}
 
-			return execution;
+				// set the state to doing
+				this.setState(doingSt);
+
+				// execute AND SAVE TO CACHE
+				var execution = fn.apply(this, arguments);
+				this.cache(name, execution);
+
+				if (q.isPromise(execution)) {
+
+					execution.done(_.partial(this.setState, doneSt));
+
+				} else {
+					// synchronous if not promise
+					// state done
+					this.setState(doneSt);
+				}
+
+				return execution;
+
+			}
 		};
+
 	};
 
 });
@@ -2034,7 +2003,7 @@ define('stateful',['require','exports','module','subject','lodash','./__stateful
 	 * @param  {[type]}
 	 * @return {[type]}           [description]
 	 */
-	var stateful = module.exports = subject({
+	var stateful = subject({
 		initialize: function initialize(options) {
 			this.initializeStateful(options);
 		},
@@ -2047,11 +2016,19 @@ define('stateful',['require','exports','module','subject','lodash','./__stateful
 		 */
 		initializeStateful: function initializeStateful(options) {
 
+			options = options || {};
+
 			/**
 			 * Property that holds the state of the object.
 			 * @type {[type]}
 			 */
 			this.state = options.state || this.state;
+
+			/**
+			 * Cache onto which state invocations will be set to.
+			 * @type {Object}
+			 */
+			this._cache = {};
 
 			_.bindAll(this, ['setState', 'getState']);
 		},
@@ -2077,37 +2054,23 @@ define('stateful',['require','exports','module','subject','lodash','./__stateful
 			return this;
 		},
 
+
+
+
+		cache: function cache(key, value) {
+
+			if (arguments.length === 1) {
+				// getter
+				return this._cache[key];
+			} else {
+				// setter
+				this._cache[key] = value;
+
+				return this;
+			}
+		},
+
 	});
-
-
-	/**
-	 * Proto method that defines an action.
-	 *
-	 * @param  {[type]} name     [description]
-	 * @param  {[type]} stateFns [description]
-	 * @return {[type]}          [description]
-	 */
-	stateful.assignProto('action', function defineAction(name, stateFns) {
-
-		if (_.isString(name)) {
-			// is a string, define a single action
-			this[name] = buildActionFn(name, stateFns);
-
-		} else {
-			// multiple actions
-			_.each(name, function (stateFns, name) {
-				this.action(name, stateFns);
-			}, this);
-		}
-
-		// always return 'this'
-		return this;
-	});
-
-
-
-
-
 
 
 
@@ -2115,25 +2078,25 @@ define('stateful',['require','exports','module','subject','lodash','./__stateful
 	 * Define actions onto the prototype.
 	 *
 	 * @param  {[type]} name     [description]
-	 * @param  {[type]} stateFns [description]
+	 * @param  {[type]} fn [description]
 	 * @return {[type]}          [description]
 	 */
 	stateful.assignStatic({
-		action: function definePrototypeAction(name, stateFns) {
+		statefulMethod: function definePrototypeAction(name, fn) {
 
 			if (_.isString(name)) {
 				// is a string, define a single action
 
 				// build the function
-				var fn = buildActionFn(name, stateFns);
+				var actionFn = buildActionFn(name, fn);
 
 				// assign the fn to the prototype.
-				this.assignProto(name, fn);
+				this.assignProto(name, actionFn);
 
 			} else {
 				// multiple actions
-				_.each(name, function (fns, name) {
-					this.action(name, fns);
+				_.each(name, function (fn, name) {
+					this.statefulMethod(name, fn);
 				}, this);
 			}
 
@@ -2153,12 +2116,18 @@ define('stateful',['require','exports','module','subject','lodash','./__stateful
 			var extended = this.extend();
 
 			// define actions onto the object
-			extended.action(actions);
+			extended.statefulMethod(actions);
 
 			// return the extended constructor
 			return extended;
-
 		}
 	});
+
+	/**
+	 * Export the extendActions method.
+	 *
+	 * @type {[type]}
+	 */
+	module.exports = _.bind(stateful.extendActions, stateful);
 });
 

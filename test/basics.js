@@ -24,7 +24,7 @@
 			done();
 		});
 
-		it('using only state names', function () {
+		it(':)', function () {
 
 
 			function doNothing() {
@@ -33,19 +33,13 @@
 
 
 			// define a builder
-			var view = stateful.extendActions({
-				show: {
-					'hide': function showWhenHidden() {
-						return 'start show';
-					},
-					'show': doNothing
+			var view = stateful({
+				show: function showWhenHidden() {
+					return 'start show';
 				},
 
-				hide: {
-					'hide': doNothing,
-					'show': function hideWhenShown() {
-						return 'start hide';
-					}
+				hide: function hideWhenShown() {
+					return 'start hide';
 				}
 			});
 
@@ -56,35 +50,6 @@
 
 
 			multistate.hide().should.eql('start hide');
-		});
-
-
-
-
-
-		it('synchronous', function () {
-
-
-			var view = stateful({
-				state: 'show:done'
-			});
-
-			view.action('show', {
-				'hide:done|hide:doing': function showWhenHidden() {
-					return 'start show';
-				},
-			});
-
-			view.action('hide', {
-				'show:done|show:doing': function hideWhenShown() {
-					return 'start hiding';
-				}
-			});
-
-
-
-			view.hide().should.eql('start hiding');
-
 		});
 	});
 });

@@ -4,6 +4,13 @@
         "version": "0.0.0"
     },
     "files": {
+        "src/__stateful/_build-action-fn.js": {
+            "name": "src/__stateful/_build-action-fn.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
         "src/__stateful/build-action-fn.js": {
             "name": "src/__stateful/build-action-fn.js",
             "modules": {},
@@ -37,7 +44,7 @@
     "classes": {},
     "classitems": [
         {
-            "file": "src/__stateful/build-action-fn.js",
+            "file": "src/__stateful/_build-action-fn.js",
             "line": 9,
             "description": "Retrieves the actionFn according to the state.",
             "params": [
@@ -59,8 +66,30 @@
             "class": ""
         },
         {
-            "file": "src/__stateful/build-action-fn.js",
+            "file": "src/__stateful/_build-action-fn.js",
             "line": 31,
+            "description": "Builds the method",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "[description]",
+                    "type": "[type]"
+                },
+                {
+                    "name": "stateFns",
+                    "description": "[description]",
+                    "type": "[type]"
+                }
+            ],
+            "return": {
+                "description": "[description]",
+                "type": "[type]"
+            },
+            "class": ""
+        },
+        {
+            "file": "src/__stateful/build-action-fn.js",
+            "line": 10,
             "description": "Builds the method",
             "params": [
                 {
@@ -123,7 +152,7 @@
         },
         {
             "file": "src/index.js",
-            "line": 51,
+            "line": 53,
             "description": "Property that holds the state of the object.",
             "type": "{[type]}",
             "class": "",
@@ -131,7 +160,15 @@
         },
         {
             "file": "src/index.js",
-            "line": 60,
+            "line": 59,
+            "description": "Cache onto which state invocations will be set to.",
+            "type": "{Object}",
+            "class": "",
+            "module": "stateful"
+        },
+        {
+            "file": "src/index.js",
+            "line": 68,
             "description": "Returns the object's current state.\nMay be overridden for custom behaviour.",
             "return": {
                 "description": "[description]",
@@ -142,7 +179,7 @@
         },
         {
             "file": "src/index.js",
-            "line": 70,
+            "line": 78,
             "description": "Sets the object's state property to whatever is passed\nas first argument.",
             "params": [
                 {
@@ -156,30 +193,7 @@
         },
         {
             "file": "src/index.js",
-            "line": 84,
-            "description": "Proto method that defines an action.",
-            "params": [
-                {
-                    "name": "name",
-                    "description": "[description]",
-                    "type": "[type]"
-                },
-                {
-                    "name": "stateFns",
-                    "description": "[description]",
-                    "type": "[type]"
-                }
-            ],
-            "return": {
-                "description": "[description]",
-                "type": "[type]"
-            },
-            "class": "",
-            "module": "stateful"
-        },
-        {
-            "file": "src/index.js",
-            "line": 115,
+            "line": 109,
             "description": "Define actions onto the prototype.",
             "params": [
                 {
@@ -188,7 +202,7 @@
                     "type": "[type]"
                 },
                 {
-                    "name": "stateFns",
+                    "name": "fn",
                     "description": "[description]",
                     "type": "[type]"
                 }
@@ -202,7 +216,7 @@
         },
         {
             "file": "src/index.js",
-            "line": 145,
+            "line": 139,
             "description": "Extend the constructor by defining actions instead of properties.",
             "params": [
                 {
@@ -215,6 +229,14 @@
                 "description": "[description]",
                 "type": "[type]"
             },
+            "class": "",
+            "module": "stateful"
+        },
+        {
+            "file": "src/index.js",
+            "line": 158,
+            "description": "Export the extendActions method.",
+            "type": "{[type]}",
             "class": "",
             "module": "stateful"
         }
@@ -230,11 +252,15 @@
         },
         {
             "message": "Missing item type\nRetrieves the actionFn according to the state.",
-            "line": " src/__stateful/build-action-fn.js:9"
+            "line": " src/__stateful/_build-action-fn.js:9"
         },
         {
             "message": "Missing item type\nBuilds the method",
-            "line": " src/__stateful/build-action-fn.js:31"
+            "line": " src/__stateful/_build-action-fn.js:31"
+        },
+        {
+            "message": "Missing item type\nBuilds the method",
+            "line": " src/__stateful/build-action-fn.js:10"
         },
         {
             "message": "Missing item type\nTHE stateful object constructor.",
@@ -246,27 +272,31 @@
         },
         {
             "message": "Missing item type\nProperty that holds the state of the object.",
-            "line": " src/index.js:51"
+            "line": " src/index.js:53"
+        },
+        {
+            "message": "Missing item type\nCache onto which state invocations will be set to.",
+            "line": " src/index.js:59"
         },
         {
             "message": "Missing item type\nReturns the object's current state.\nMay be overridden for custom behaviour.",
-            "line": " src/index.js:60"
+            "line": " src/index.js:68"
         },
         {
             "message": "Missing item type\nSets the object's state property to whatever is passed\nas first argument.",
-            "line": " src/index.js:70"
-        },
-        {
-            "message": "Missing item type\nProto method that defines an action.",
-            "line": " src/index.js:84"
+            "line": " src/index.js:78"
         },
         {
             "message": "Missing item type\nDefine actions onto the prototype.",
-            "line": " src/index.js:115"
+            "line": " src/index.js:109"
         },
         {
             "message": "Missing item type\nExtend the constructor by defining actions instead of properties.",
-            "line": " src/index.js:145"
+            "line": " src/index.js:139"
+        },
+        {
+            "message": "Missing item type\nExport the extendActions method.",
+            "line": " src/index.js:158"
         }
     ]
 }

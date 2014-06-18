@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/index.js - stateful</title>
+    <title>src/__stateful/_build-action-fn.js - stateful</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -82,173 +82,102 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: src/index.js</h1>
+                        <h1 class="file-heading">File: src/__stateful/_build-action-fn.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
-//     stateful
-//     (c) simonfan
-//     stateful is licensed under the MIT terms.
-
-/**
- * AMD and CJS module.
- *
- * @module stateful
- */
-
 /* jshint ignore:start */
 if (typeof define !== &#x27;function&#x27;) { var define = require(&#x27;amdefine&#x27;)(module) }
 /* jshint ignore:end */
-
 define(function (require, exports, module) {
-	&#x27;use strict&#x27;;
 
-
-	var subject = require(&#x27;subject&#x27;),
-		_       = require(&#x27;lodash&#x27;);
-
-	// Builds a function that will check for the state and
-	// run the correct method
-	var buildActionFn = require(&#x27;./__stateful/build-action-fn&#x27;);
-
-	// object for defining non enumerable properties using
-	// Object.defineProperty.
-	var nonEnum = { enumerable: false };
-
+	var _ = require(&#x27;lodash&#x27;),
+		q = require(&#x27;q&#x27;);
 
 	/**
-	 * THE stateful object constructor.
+	 * Retrieves the actionFn according to the state.
 	 *
-	 * @param  {[type]}
-	 * @param  {[type]}
-	 * @return {[type]}           [description]
-	 */
-	var stateful = subject({
-		initialize: function initialize(options) {
-			this.initializeStateful(options);
-		},
-
-		/**
-		 * Whatever is needed for stateful object to start working.
-		 *
-		 * @param  {[type]} options [description]
-		 * @return {[type]}         [description]
-		 */
-		initializeStateful: function initializeStateful(options) {
-
-			options = options || {};
-
-			/**
-			 * Property that holds the state of the object.
-			 * @type {[type]}
-			 */
-			this.state = options.state || this.state;
-
-			/**
-			 * Cache onto which state invocations will be set to.
-			 * @type {Object}
-			 */
-			this._cache = {};
-
-			_.bindAll(this, [&#x27;setState&#x27;, &#x27;getState&#x27;]);
-		},
-
-		/**
-		 * Returns the object&#x27;s current state.
-		 * May be overridden for custom behaviour.
-		 *
-		 * @return {[type]} [description]
-		 */
-		getState: function getState() {
-			return this.state;
-		},
-
-		/**
-		 * Sets the object&#x27;s state property to whatever is passed
-		 * as first argument.
-		 *
-		 * @param {[type]} state [description]
-		 */
-		setState: function setState(state) {
-			this.state = state;
-			return this;
-		},
-
-
-
-
-		cache: function cache(key, value) {
-
-			if (arguments.length === 1) {
-				// getter
-				return this._cache[key];
-			} else {
-				// setter
-				this._cache[key] = value;
-
-				return this;
-			}
-		},
-
-	});
-
-
-
-	/**
-	 * Define actions onto the prototype.
-	 *
-	 * @param  {[type]} name     [description]
-	 * @param  {[type]} fn [description]
+	 * @param  {[type]} stateFns [description]
+	 * @param  {[type]} state    [description]
 	 * @return {[type]}          [description]
 	 */
-	stateful.assignStatic({
-		statefulMethod: function definePrototypeAction(name, fn) {
+	function retrieveStateActionFn(stateFns, state) {
 
-			if (_.isString(name)) {
-				// is a string, define a single action
+		var fn =
+			// [1] try to get the exact state
+			stateFns[state] ||
+			// [2] get the &#x27;state name&#x27;  (statename:statestatus) (somestate:doing)
+			stateFns[state.split(&#x27;:&#x27;)[0]] ||
+			// [3] get the default fn
+			stateFns[&#x27;default&#x27;] ||
+			// [4] noop.
+			_.noop;
 
-				// build the function
-				var actionFn = buildActionFn(name, fn);
-
-				// assign the fn to the prototype.
-				this.assignProto(name, actionFn);
-
-			} else {
-				// multiple actions
-				_.each(name, function (fn, name) {
-					this.statefulMethod(name, fn);
-				}, this);
-			}
-
-			// always return &#x27;this&#x27;
-			return this;
-		},
-
-		/**
-		 * Extend the constructor by defining actions instead of properties.
-		 *
-		 * @param  {[type]} actions [description]
-		 * @return {[type]}         [description]
-		 */
-		extendActions: function extendActions(actions) {
-
-			// create an extended constructor
-			var extended = this.extend();
-
-			// define actions onto the object
-			extended.statefulMethod(actions);
-
-			// return the extended constructor
-			return extended;
-		}
-	});
+		return fn;
+	}
 
 	/**
-	 * Export the extendActions method.
+	 * Builds the method
 	 *
-	 * @type {[type]}
+	 * @param  {[type]} name     [description]
+	 * @param  {[type]} stateFns [description]
+	 * @return {[type]}          [description]
 	 */
-	module.exports = _.bind(stateful.extendActions, stateful);
+	module.exports = function buildActionFn(name, stateFns) {
+
+		// parse out the stateFns
+		// They come in the format: {
+		//     &#x27;state:doing|state:done&#x27;: fn,
+		//     &#x27;state&#x27;                 : fn,
+		//
+		// }
+		var _stateFns = {};
+
+		// state fns.
+		_.each(stateFns, function (fn, stateNames) {
+
+			var split = stateNames.split(/\s*\|\s*/g);
+
+			_.each(split, function (stateName) {
+				_stateFns[stateName] = fn;
+			});
+
+		});
+
+
+		// variables to hold state names in cache
+		var doing = name + &#x27;:doing&#x27;,
+			done  = name + &#x27;:done&#x27;;
+
+		// return a function that wraps the execution
+		// with a state setting logic.
+		return function action() {
+			// get the state of the object
+			var state = this.getState();
+
+			// get the function
+			var fn = retrieveStateActionFn(_stateFns, state);
+
+			// set the state to doing
+			this.setState(doing);
+
+			// execute
+			var execution = fn.apply(this, arguments);
+
+			if (q.isPromise(execution)) {
+
+				execution.done(_.partial(this.setState, done));
+
+			} else {
+				// synchronous if not promise
+				// state done
+				this.setState(done);
+			}
+
+			return execution;
+		};
+	};
+
 });
 
     </pre>
